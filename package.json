@@ -1,5 +1,6 @@
 {
   "name": "loc-mock",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
   "devDependencies": {
@@ -35,6 +36,10 @@
     "dev:hmr": "concurrently -k \"vite --port 5173\" \"electrobun dev\"",
     "build:web": "vite build",
     "build": "vite build && electrobun build",
+    "build:canary": "vite build && electrobun build --env=canary",
+    "build:stable": "vite build && electrobun build --env=stable",
+    "package:dmg": "bun scripts/package-dmg.ts",
+    "release:local": "bun run build && bun run package:dmg",
     "start": "vite build && electrobun dev"
   }
 }
