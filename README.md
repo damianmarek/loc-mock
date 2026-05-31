@@ -1,31 +1,73 @@
 # loc-mock
 
-## Local Release
+> Mock GPS location on your iOS simulator. Pick a spot on a map — your simulator follows.
 
-Build the macOS app and package it as a drag-to-Applications DMG:
+![screenshot](screenshot.png)
 
-```bash
-bun run release:local
-```
+## Features
 
-The DMG is written to `release/`.
+- **Map-based location picker** — click anywhere on the MapLibre GL OpenStreetMap to place a draggable marker
+- **Search** — Nominatim autocomplete for place names, or type raw coordinates (`52.2297, 21.0122`)
+- **Set Location** — runs `xcrun simctl location booted set` on a booted iOS simulator
+- **Clear Location** — reverts to the simulator's real location
+- **Auto-updater** — checks for updates on launch via GitHub Releases
 
-This flow does not require a paid Apple Developer account. The app is ad-hoc signed, so macOS may still show an unidentified developer warning. If blocked on first launch, right-click the installed app in `/Applications` and choose Open.
+## Prerequisites
 
-## GitHub Release
+- macOS **arm64** (Apple Silicon)
+- [Bun](https://bun.sh)
+- Xcode CLI tools (`xcode-select --install`)
+- A **booted** iOS simulator
 
-Pushing a `v*` tag runs `.github/workflows/release.yml`, builds the app on macOS, packages a DMG, uploads it as a workflow artifact, and attaches it to the GitHub release.
-
-To install dependencies:
+## Install
 
 ```bash
 bun install
 ```
 
-To run:
+## Run
 
 ```bash
-bun run index.ts
+# Dev with HMR (concurrently Vite + Electrobun):
+bun run dev:hmr
+
+# Cold start (build web + Electrobun dev):
+bun run dev
 ```
 
-This project was created using `bun init` in bun v1.3.14. [Bun](https://bun.com) is a fast all-in-one JavaScript runtime.
+## Build
+
+```bash
+# Production build (Vite + Electrobun):
+bun run build
+
+# Package as drag-to-Applications DMG:
+bun run release:local
+
+# DMG is written to release/
+```
+
+## Release
+
+Push a `v*` tag. [CI](.github/workflows/release.yml) builds, packages a DMG, and attaches it to the GitHub release.
+
+## Architecture
+
+Two-process Electrobun app:
+
+- **`src/bun/index.ts`** — main process: app menu, window creation, RPC handlers. Shells to `xcrun simctl location`.
+- **`src/mainview/`** — webview UI: React 18 + shadcn/ui, MapLibre GL map with Nominatim geocoding. Communicates via typed Electrobun RPC.
+
+The RPC contract lives in [`src/shared/types.ts`](src/shared/types.ts) — changes must stay in sync between both processes.
+
+## Tech stack
+
+| Layer | |
+|-------|---|
+| Desktop framework | [Electrobun](https://electrobun.dev) (Bun-based, macOS) |
+| Runtime | [Bun](https://bun.sh) |
+| Frontend | React 18, TypeScript, Tailwind CSS v3, shadcn/ui |
+| Map | [MapLibre GL](https://maplibre.org) via react-map-gl/maplibre |
+| Geocoding | [Nominatim](https://nominatim.openstreetmap.org) (OSM) |
+| Toasts | [Sonner](https://sonner.emilkowal.ski) |
+| Build | Vite 6 + Electrobun CLI |
