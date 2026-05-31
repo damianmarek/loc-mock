@@ -3,7 +3,7 @@ import type { ElectrobunConfig } from "electrobun";
 export default {
   app: {
     name: "Location Mocker",
-    identifier: "dev.locmock.app",
+    identifier: "com.damianmarek.locmock",
     version: "0.1.0",
   },
   runtime: {
