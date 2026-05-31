@@ -1,4 +1,4 @@
-import { BrowserWindow, BrowserView, ApplicationMenu } from "electrobun/bun";
+import { BrowserWindow, BrowserView, ApplicationMenu, Updater } from "electrobun/bun";
 import { $ } from "bun";
 import type { LocMockRPCSchema } from "../shared/types";
 
@@ -34,6 +34,10 @@ const rpc = BrowserView.defineRPC<LocMockRPCSchema>({
           return { success: false, message: msg };
         }
       },
+      ready: async () => {
+        checkForAppUpdate();
+        return {};
+      },
     },
     messages: {},
   },
@@ -57,19 +61,36 @@ ApplicationMenu.setApplicationMenu([
   },
 ]);
 
-async function getWindowUrl(): Promise<string> {
-  const maxRetries = 10;
-  for (let i = 0; i < maxRetries; i++) {
-    try {
-      const res = await fetch(`http://localhost:${VITE_DEV_PORT}`, {
-        method: "HEAD",
-      });
-      if (res.ok) {
-        return `http://localhost:${VITE_DEV_PORT}`;
-      }
-    } catch {}
-    await Bun.sleep(500);
+async function checkForAppUpdate() {
+  try {
+    rpc.send.updateStatus({ params: { status: "checking" } });
+
+    const updateInfo = await Updater.checkForUpdate();
+
+    if (!updateInfo.updateAvailable) {
+      rpc.send.updateStatus({ params: { status: "none" } });
+      return;
+    }
+
+    rpc.send.updateStatus({ params: { status: "downloading" } });
+    await Updater.downloadUpdate();
+
+    if (Updater.updateInfo()?.updateReady) {
+      rpc.send.updateStatus({ params: { status: "ready" } });
+      await Bun.sleep(2000);
+      await Updater.applyUpdate();
+    }
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    rpc.send.updateStatus({ params: { status: "error", message: msg } });
   }
+}
+
+async function getWindowUrl(): Promise<string> {
+  try {
+    const res = await fetch(`http://localhost:${VITE_DEV_PORT}`, { method: "HEAD" });
+    if (res.ok) return `http://localhost:${VITE_DEV_PORT}`;
+  } catch {}
   return "views://mainview/index.html";
 }
 

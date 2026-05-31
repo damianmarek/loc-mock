@@ -9,11 +9,22 @@ export type LocMockRPCSchema = {
         params: {};
         response: { success: boolean; message: string };
       };
+      ready: {
+        params: {};
+        response: {};
+      };
     };
     messages: {};
   };
   webview: {
     requests: {};
-    messages: {};
+    messages: {
+      updateStatus: {
+        params: {
+          status: "checking" | "downloading" | "ready" | "error" | "none";
+          message?: string;
+        };
+      };
+    };
   };
 };

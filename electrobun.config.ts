@@ -1,10 +1,11 @@
 import type { ElectrobunConfig } from "electrobun";
+import pkg from "./package.json" with { type: "json" };
 
 export default {
   app: {
-    name: "Location Mocker",
+    name: "LocMock",
     identifier: "com.damianmarek.locmock",
-    version: "0.1.0",
+    version: pkg.version,
   },
   runtime: {
     exitOnLastWindowClosed: true,
@@ -18,5 +19,9 @@ export default {
       "dist/index.html": "views/mainview/index.html",
       "dist/assets": "views/mainview/assets",
     },
+  },
+  release: {
+    baseUrl:
+      "https://github.com/damianmarek/loc-mock/releases/latest/download/",
   },
 } satisfies ElectrobunConfig;
